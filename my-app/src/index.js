@@ -4,7 +4,10 @@ import './index.css';
 
 function Square(props) {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button 
+      className={"square " + (props.winningSquare ? "square-winning" : null)}
+      onClick={props.onClick} 
+    >
       {props.value}
     </button>
   );
@@ -16,29 +19,26 @@ class Board extends React.Component {
       <Square 
         value = {this.props.squares[i]}
         onClick = {() => this.props.onClick(i)}
+        winningSquare = {this.props.winner && this.props.winner.includes(i) ? true : false}
       />
     );
   }
   
+  renderRow(i){
+    let row = []
+    for(let j=0;j<3;j++){
+      row.push(this.renderSquare(i*3+j));
+    }
+    return row;
+  }
+
   render() {
-    return (
-      <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
-      </div>
+    let squares = []
+    for(let i=0;i<3;i++){
+      squares.push(<div className="board-row">{this.renderRow(i)}</div>);
+    }
+    return(
+      <div>{squares}</div>
     );
   }
 }
@@ -49,9 +49,11 @@ class Game extends React.Component {
     this.state = {
       history: [{
         squares: Array(9).fill(null),
+        clicked: null,
       }],
       stepNumber: 0,
       xIsNext: true,
+      isAscending: true,
     };
   }
 
@@ -66,6 +68,7 @@ class Game extends React.Component {
     this.setState({
       history: history.concat([{
         squares: squares,
+        clicked: i,
       }]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
@@ -75,7 +78,13 @@ class Game extends React.Component {
   jumpTo(step){
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) ===0,
+      xIsNext: (step % 2) === 0,
+    });
+  }
+
+  isSortByAscending(){
+    this.setState({
+      isAscending: !this.state.isAscending
     });
   }
 
@@ -85,8 +94,11 @@ class Game extends React.Component {
     const winner = calculateWinner(current.squares);
 
     const moves = history.map((step, move) => {
+      let r = Math.floor(history[move].clicked/3)+1;
+      let c = history[move].clicked%3+1;
+      
       const desc = move ?
-        'Go to move #' + move :
+        'Go to move #' + move + (move%2 ? ', X' : ', O')+' placed at (' + c + ',' + r + ')':
         'Go to game start';
       return(
         <li key={move}>
@@ -98,11 +110,11 @@ class Game extends React.Component {
 
     let status;
     if(winner){
-      status = 'Winner: ' + winner;
+      status = 'Winner: ' + winner.winner;
     }else if(this.state.stepNumber < 9){
-      status= 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }else{
-      status= 'Draw';
+      status = 'Draw';
     }
 
     return (
@@ -111,11 +123,15 @@ class Game extends React.Component {
           <Board
             squares={current.squares}
             onClick={(i) => this.handleClick(i)}
+            winner={winner && winner.winningSquares}
           />
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <ol>{moves}</ol>
+          <button onClick={() => this.isSortByAscending()}>
+            Sort by: {this.state.isAscending ? 'Ascending' : 'Descending'}
+          </button>
+          <ol>{this.state.isAscending ? moves : moves.reverse()}</ol>
         </div>
       </div>
     );
@@ -136,7 +152,10 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return{
+        winner: squares[a],
+        winningSquares: lines[i]
+      } 
     }
   }
   return null;

@@ -32,6 +32,10 @@ body {
     width: 34px;
   }
   
+  .square-winning{
+    background: rgb(255, 255, 0);
+  }
+
   .square:focus {
     outline: none;
   }
