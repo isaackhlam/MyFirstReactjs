@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-var element = React.createElement('h1', {className: 'greeting'}, 'Hello, world!');
-root.render(element);
+class CommentInput extends Component{
+    render() {
+        return (
+            <div>CommentInput</div>
+        )
+    }
+}
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+class CommentList extends Component {
+    render() {
+        return (
+            <div>CommentList</div>
+        )
+    }
+}
+class CommentApp extends Component {
+    render() {
+        return (
+            <div className = "wrapper">
+                <CommentInput />
+                <CommentList />
+            </div>
+        )
+    }
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CommentApp />);
