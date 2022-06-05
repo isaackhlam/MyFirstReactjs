@@ -5,7 +5,9 @@ import './index.css';
 
 class Comment extends Component {
 	static propTypes = {
-		comment: PropTypes.object.isRequired
+		comment: PropTypes.object.isRequired,
+		onDeleteComment: PropTypes.func,
+		index: PropTypes.number
 	}
 
 	constructor() {
@@ -21,6 +23,10 @@ class Comment extends Component {
 		)
 	}
 
+	componentWillUnmount() {
+		clearInterval(this._timer)
+	}
+
 	_updateTimeString() {
 		const comment = this.props.comment
 		const duration = (+Date.now() - comment.createdTime) / 1000
@@ -31,15 +37,38 @@ class Comment extends Component {
 		})
 	}
 
+	_getProcessedContent(content) {
+		return content
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#039;")
+			.replace(/`([\S\s]+?)`/g, '<code>$1</code>')
+	}
+
+	handleDeleteComment() {
+		if (this.props.onDeleteComment) {
+			this.props.onDeleteComment(this.props.index)
+		}
+	}
+
 	render() {
 		return (
 			<div className='comment'>
 				<div className='comment-user'>
 					<span>{this.props.comment.username}</span> :
 				</div>
-					<p>{this.props.comment.content}</p>
+					<p dangerouslySetInnerHTML={{
+						__html: this._getProcessedContent(this.props.comment.content)
+					}} />
 					<span className='comment-createdtime'>
 						{this.state.timeString}
+					</span>
+					<span 
+						onClick={this.handleDeleteComment.bind(this)}
+						className='comment-delete'>
+						delete
 					</span>
 			</div>
 		)
@@ -94,7 +123,7 @@ class CommentInput extends Component{
 		})
 	}
 
-	handleSubmit(event) {
+	handleSubmit() {
 		if (this.props.onSubmit) {
 			this.props.onSubmit({
 				username: this.state.username, 
@@ -140,14 +169,31 @@ class CommentInput extends Component{
 }
 
 class CommentList extends Component {
+	static propTypes = {
+		comments: PropTypes.array,
+		onDeleteComment: PropTypes.func
+	}
+	
 	static defaultProps = {
 		comments: []
 	}
 
+	handleDeleteComment(index) {
+		if (this.props.onDeleteComment) {
+			this.props.onDeleteComment(index)
+		}
+	}
+
   render() {
     return (
-      <div>{this.props.comments.map((comment, i) => 
-					<Comment comment={comment} key={i} />
+      <div>
+				{this.props.comments.map((comment, i) => 
+					<Comment
+						comment={comment}
+						key={i}
+						index={i}
+						onDeleteComment={this.handleDeleteComment.bind(this)}
+					/>
 				)}</div>
     )
   }
@@ -186,13 +232,22 @@ class CommentApp extends Component {
 		this._saveComments(comments)
 	}
 
+	handleDeleteComment(index) {
+		const comments = this.state.comments
+		comments.splice(index, 1)
+		this.setState({comments})
+		this._saveComments(comments)
+	}
+
   render() {
     return (
       <div className = "wrapper">
         <CommentInput 
 					onSubmit={this.handleSubmitComment.bind(this)} />
         <CommentList 
-					comments={this.state.comments} />
+					comments={this.state.comments} 
+					onDeleteComment={this.handleDeleteComment.bind(this)}	
+				/>
       </div>
     )
   }
