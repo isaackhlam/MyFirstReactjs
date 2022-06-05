@@ -2,13 +2,26 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
+class Comment extends Component {
+	render() {
+		return (
+			<div className='comment'>
+				<div className='comment-user'>
+					<span>{this.props.comment.username}</span> :
+				</div>
+					<p>{this.props.comment.content}</p>
+			</div>
+		)
+	}
+}
+
 class CommentInput extends Component{
 	constructor() {
-		super();
+		super()
 		this.state = {
 			username: "",
 			content: "",
-		};
+		}
 	}
 
 	handleUsernameChange(event) {
@@ -25,10 +38,10 @@ class CommentInput extends Component{
 
 	handleSubmit(event) {
 		if (this.props.onSubmit) {
-			const {username, content} = this.state;
-			this.props.onSubmit({username, content});
+			const {username, content} = this.state
+			this.props.onSubmit({username, content})
 		}
-		this.setState({content:""});
+		this.setState({content:""})
 	}
 
   render() {
@@ -64,27 +77,47 @@ class CommentInput extends Component{
 }
 
 class CommentList extends Component {
+	static defaultProps = {
+		comments: []
+	}
+
   render() {
     return (
-      <div>CommentList</div>
+      <div>{this.props.comments.map((comment, i) => 
+					<Comment comment={comment} key={i} />
+				)}</div>
     )
   }
 }
 class CommentApp extends Component {
-handleSubmitComment (comment) {
-	console.log(comment)
-}
+	constructor() {
+		super()
+		this.state = {
+			comments: []
+		}
+	}
+
+	handleSubmitComment (comment) {
+		if (!comment) return
+		if(!comment.username) return alert("Please input username")
+		if(!comment.content) return alert("Please input comment")
+		this.state.comments.push(comment)
+		this.setState({
+			comments: this.state.comments
+		})
+	}
 
   render() {
     return (
       <div className = "wrapper">
         <CommentInput 
 					onSubmit={this.handleSubmitComment.bind(this)} />
-        <CommentList />
+        <CommentList 
+					comments={this.state.comments} />
       </div>
     )
   }
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<CommentApp />);
+const root = ReactDOM.createRoot(document.getElementById("root"))
+root.render(<CommentApp />)
