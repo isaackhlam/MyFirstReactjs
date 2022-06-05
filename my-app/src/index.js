@@ -1,8 +1,36 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component} from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
 class Comment extends Component {
+	static propTypes = {
+		comment: PropTypes.object.isRequired
+	}
+
+	constructor() {
+		super()
+		this.state = {timeString: ""}
+	}
+
+	componentWillMount() {
+		this._updateTimeString()
+		this._timer = setInterval(
+			this._updateTimeString.bind(this),
+			5000
+		)
+	}
+
+	_updateTimeString() {
+		const comment = this.props.comment
+		const duration = (+Date.now() - comment.createdTime) / 1000
+		this.setState({
+			timeString: duration > 60
+			? `${Math.round(duration / 60)} minutes ago`
+			: `${Math.round(Math.max(duration, 1))} seconds ago`
+		})
+	}
+
 	render() {
 		return (
 			<div className='comment'>
@@ -10,15 +38,18 @@ class Comment extends Component {
 					<span>{this.props.comment.username}</span> :
 				</div>
 					<p>{this.props.comment.content}</p>
+					<span className='comment-createdtime'>
+						{this.state.timeString}
+					</span>
 			</div>
 		)
 	}
 }
 
 class CommentInput extends Component{
-	// static propTypes = {
-	// 	onSubmit: PropTypes.func
-	// }
+	static propTypes = {
+		onSubmit: PropTypes.func
+	}
 
 	constructor() {
 		super()
@@ -65,8 +96,11 @@ class CommentInput extends Component{
 
 	handleSubmit(event) {
 		if (this.props.onSubmit) {
-			const {username, content} = this.state
-			this.props.onSubmit({username, content})
+			this.props.onSubmit({
+				username: this.state.username, 
+				content: this.state.content,
+				createdTime: +new Date()
+			})
 		}
 		this.setState({content:""})
 	}
